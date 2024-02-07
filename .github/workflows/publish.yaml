@@ -1,0 +1,86 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Every 30 minutes, Monday through Friday
+    - cron: '*/30 * * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@63c24ba6bd7ba022e95695ff85de572c04a18142 # v2.7.0
+        with:
+          egress-policy: audit
+          disable-telemetry: true
+
+      - name: Check out repo
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Process config
+        env:
+          KRS_AUTOMATION_KEY: ${{ secrets.KRS_AUTOMATION_KEY }}
+          APP_INSTALL_ID: 29980719
+        run: |-
+          set -euo pipefail
+          function createJWT() {
+            local header=$(echo -n '{"alg":"RS256","typ":"JWT"}' | base64 | sed s/\+/-/ | sed -E s/=+$//)
+            local now_utc=$(date --utc +%s)
+            local payload=$(echo -n '{"iat":'$((now_utc - 60))',"exp":'$((now_utc + 120))',"iss":245286}' | base64 | sed s/\+/-/ | sed -E s/=+$//)
+            local signature=$(echo -n "${header}.${payload}" | openssl dgst -sha256 -binary -sign <(echo "${KRS_AUTOMATION_KEY}")| base64 | tr -d '\n=' | tr -- '+/' '-_')
+            echo "${header}.${payload}.${signature}"
+          }
+
+          export GITHUB_TOKEN=$(curl -s -X POST -H "Authorization: Bearer $(createJWT)" -H "Accept: application/vnd.github+json" https://api.github.com/app/installations/${APP_INSTALL_ID}/access_tokens | jq -r .token)
+          < ./config.yaml envsubst > config-with-token.yaml
+          cat config-with-token.yaml
+
+      - name: Run review-rot
+        uses: lcarva/review-rot-action/run@cb3c7455d9489ac76d1366076d19d1b91e9384a6 # main
+        with:
+          config: config-with-token.yaml
+          output: output.json
+
+      - name: Process data
+        run: |-
+          set -euo pipefail
+          echo '=== START OF FULL DATA ==='
+          cat output.json
+          echo '==== END OF FULL DATA ===='
+
+          mkdir web
+
+          < output.json ./filter-data.sh > web/data.json
+          echo '=== START OF FILTERED DATA ==='
+          cat web/data.json
+          echo '==== END OF FILTERED DATA ===='
+
+      - name: Fetch review-rot web
+        uses: lcarva/review-rot-action/web@cb3c7455d9489ac76d1366076d19d1b91e9384a6 # main
+        with:
+          output: web
+
+      - name: Configure pages
+        uses: actions/configure-pages@1f0c5cde4bc74cd7e1254d0cb4de8d49e9068c7d # v4.0.0
+
+      - name: Upload pages artifact
+        uses: actions/upload-pages-artifact@0252fc4ba7626f0298f0cf00902a25c6afc77fa8 # v3.0.0
+        with:
+          path: web
+
+      - name: Deploy pages
+        uses: actions/deploy-pages@87c3283f01cd6fe19a0ab93a23b2f6fcba5a8e42 # v4.0.3
+        id: deployment

@@ -1,0 +1,17 @@
+arguments:
+  format: json
+git_services:
+- host: github.com
+  repos:
+  - redhat-appstudio/release-service
+  - redhat-appstudio/release-service-utils
+  - redhat-appstudio/internal-services
+  - redhat-appstudio/release-service-catalog
+  - redhat-appstudio/book
+  - redhat-appstudio/docs.appstudio.io
+  - redhat-appstudio/e2e-tests
+  - redhat-appstudio/infra-deployments
+  #- renovatebot/renovate
+  - tektoncd/chains
+  token: "${GITHUB_TOKEN}"
+  type: github
