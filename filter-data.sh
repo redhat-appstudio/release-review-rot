@@ -19,7 +19,9 @@ authors='[
 jq --argjson authors "${authors}" -r '[
     .[] | select(
         ([.user] | inside($authors)) or
-        (.url | contains("/release/")) or
-        (.title | test("RELEASE"; "i"))
+        (.url | contains("release-service-catalog")) or
+        (.url | contains("release-service-utils")) or
+        (.url | contains("/release-service/")) or
+        (.url | contains("internal-services"))
     )
 ]'
