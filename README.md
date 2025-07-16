@@ -10,7 +10,7 @@ This repository tracks outstanding code reviews and pull requests across multipl
 
 - **Monitors 9+ GitHub repositories** in the Konflux ecosystem
 - **Tracks specific team members** and their review assignments
-- **Filters for release-related content** (URLs with "/release/", titles with "RHTAPREL")
+- **Filters for core release repositories** (release-service, release-service-utils, release-service-catalog, internal-services)
 - **Generates JSON data** for the dashboard website
 - **Publishes automatically** to GitHub Pages
 
@@ -151,19 +151,20 @@ To remove a team member:
 
 ## Filtering Logic
 
-The `filter-data.sh` script filters reviews based on three criteria:
+The `filter-data.sh` script filters reviews based on two criteria:
 
-1. **Team Member Reviews**: Reviews assigned to or created by tracked team members
-2. **Release-related URLs**: Any review with "/release/" in the URL
-3. **RHTAPREL Issues**: Reviews with "RHTAPREL" in the title (case-insensitive)
+1. **Team Member Reviews**: All PRs from tracked team members (any repository)
+2. **Core Release Repository PRs**: All PRs from anyone in critical release repositories
 
 ```bash
 # The filter keeps reviews that match ANY of these conditions:
 jq '[
     .[] | select(
-        ([.user] | inside($authors)) or           # Team member involved
-        (.url | contains("/release/")) or         # Release-related URL
-        (.title | test("RHTAPREL"; "i"))         # RHTAPREL in title
+        ([.user] | inside($authors)) or                    # All PRs from team members
+        (.url | contains("release-service-catalog")) or   # All PRs from catalog repo
+        (.url | contains("release-service-utils")) or     # All PRs from utils repo
+        (.url | contains("/release-service/")) or         # All PRs from main release service
+        (.url | contains("internal-services"))            # All PRs from internal services
     )
 ]'
 ```
