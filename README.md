@@ -156,17 +156,48 @@ The `filter-data.sh` script filters reviews based on two criteria:
 1. **Team Member Reviews**: All PRs from tracked team members (any repository)
 2. **Core Release Repository PRs**: All PRs from anyone in critical release repositories
 
+The script outputs **enhanced JSON** with repository grouping, team member identification, and summary statistics.
+
+### Output Structure
+
+```json
+{
+  "summary": {
+    "generated_at": "2025-01-12T15:30:00Z",
+    "total_prs": 15,
+    "team_member_prs": 8, 
+    "external_prs": 7,
+    "repositories": {
+      "release-service": {
+        "team_members": 3,
+        "external": 2,
+        "total": 5
+      }
+    }
+  },
+  "by_repository": {
+    "release-service": [
+      {
+        "title": "PR title",
+        "user": "hbhati",
+        "is_team_member": true,
+        "repository": "release-service"
+      }
+    ]
+  },
+  "all_pull_requests": [...]
+}
+```
+
+### Filtering Conditions
+
 ```bash
 # The filter keeps reviews that match ANY of these conditions:
-jq '[
-    .[] | select(
-        ([.user] | inside($authors)) or                    # All PRs from team members
-        (.url | contains("release-service-catalog")) or   # All PRs from catalog repo
-        (.url | contains("release-service-utils")) or     # All PRs from utils repo
-        (.url | contains("/release-service/")) or         # All PRs from main release service
-        (.url | contains("internal-services"))            # All PRs from internal services
-    )
-]'
+([.user] | inside($authors)) or                    # All PRs from team members
+(.url | contains("release-service-catalog")) or   # All PRs from catalog repo
+(.url | contains("release-service-utils")) or     # All PRs from utils repo
+(.url | contains("/release-service/")) or         # All PRs from main release service
+(.url | contains("internal-services"))            # All PRs from internal services
 ```
 
 ## Monitored Repositories
