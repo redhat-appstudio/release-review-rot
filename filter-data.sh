@@ -7,6 +7,10 @@ authors='[
   "mmalina",
   "theflockers",
   "davidmogar",
+  "FilipNikolovski",
+  "seanconroy2021",
+  "Paul123111",
+  "elenagerman",
   "red-hat-konflux",
   "jinqi7"
 ]'
@@ -16,6 +20,6 @@ jq --argjson authors "${authors}" -r '[
     .[] | select(
         ([.user] | inside($authors)) or
         (.url | contains("/release/")) or
-        (.title | test("RHTAPREL"; "i"))
+        (.title | test("RELEASE"; "i"))
     )
 ]'

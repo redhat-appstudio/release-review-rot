@@ -3,15 +3,14 @@ arguments:
 git_services:
 - host: github.com
   repos:
-  - redhat-appstudio/release-service
-  - redhat-appstudio/release-service-utils
-  - redhat-appstudio/internal-services
-  - redhat-appstudio/release-service-catalog
-  - redhat-appstudio/book
-  - redhat-appstudio/docs.appstudio.io
-  - redhat-appstudio/e2e-tests
+  - konflux-ci/release-service
+  - konflux-ci/release-service-utils
+  - konflux-ci/internal-services
+  - konflux-ci/release-service-catalog
+  - konflux-ci/e2e-tests
+  - konflux-ci/build-definitions
+  - konflux-ci/build-trusted-artifacts
+  - konflux-ci/docs
   - redhat-appstudio/infra-deployments
-  - redhat-appstudio/tenants-config
-  - tektoncd/chains
   token: "${GITHUB_TOKEN}"
   type: github
